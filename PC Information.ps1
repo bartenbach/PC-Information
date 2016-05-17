@@ -7,7 +7,7 @@ goto NOCON
 
 :WINNT
 CLS
-REM set variables
+# set variables
 set system=
 set manufacturer=
 set model=
@@ -25,24 +25,24 @@ set cstring=
 set ustring=
 set pstring=
 
-REM Get Computer Name / IP Address
+# Get Computer Name / IP Address
 echo Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!
 set computer=%computername%
 set /p computer=[Enter a PC name or IP Address Here] 
 echo ----------------
 
-REM Check If Remote Machine
+# Check If Remote Machine
 IF NOT %computer% == %computername% goto remote
 goto start
 
-:REMOTE
-REM It's A Remote Machine
+:#OTE
+# It's A Remote Machine
 set cstring=/node:"%computer%"
 
 :USERNAME
-REM Get Username
+# Get Username
 
-REM TO REENABLE username and password, REMOVE "goto start" BELOW THIS LINE.  Otherwise program assumes credentials of logged in individual.
+# TO REENABLE username and password, REMOVE "goto start" BELOW THIS LINE.  Otherwise program assumes credentials of logged in individual.
 goto start
 echo ----------------
 echo Type a Username and press Enter (!!MUST BE ADMIN ON REMOTE SYSTEM!!)
@@ -50,28 +50,28 @@ set user=%username%
 set /p user=[Press Enter To Use Your Username - %username%]
 echo ----------------
 
-REM Check If Other Username
+# Check If Other Username
 IF NOT %user% == %username% goto newuser
 
 :NEWUSER
-REM It's A Different User
+# It's A Different User
 set ustring=/user:"%user%"
 
 :PASSWORD
-REM Get Password
+# Get Password
 echo ----------------
 echo Type in a Password and press Enter (with or without DOMAIN)
 set pass=
 set /p pass=
 echo ----------------
 
-REM Check if password was entered
+# Check if password was entered
 IF [%pass%] == [] goto nopass
 set pstring=/password:"%pass%"
 goto start
 
 :NOPASS
-REM No password entered
+# No password entered
 set pstring=
 
 :START
@@ -79,7 +79,7 @@ CLS
 echo Checking connection [Computer: %computer%]...
 echo Please Wait....
 
-REM Check connection
+# Check connection
 wmic %cstring% %ustring% %pstring% OS Get csname
 
 IF %errorlevel% == -2147023174 goto norpc
@@ -88,51 +88,51 @@ IF %errorlevel% == -2147024891 goto baduser
 echo Getting data [Computer: %computer%]...
 echo Please Wait....
 
-REM Get Computer Name
+# Get Computer Name
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS Get csname /value') do SET system=%%A
 
-REM Get Computer Manufacturer
+# Get Computer Manufacturer
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% ComputerSystem Get Manufacturer /value') do SET manufacturer=%%A
 
-REM Get Computer Model
+# Get Computer Model
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% ComputerSystem Get Model /value') do SET model=%%A
 
-REM Get Computer Serial Number
+# Get Computer Serial Number
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% Bios Get SerialNumber /value') do SET serialnumber=%%A
 
-REM Get Computer BIOS Version
+# Get Computer BIOS Version
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% Bios Get SMBIOSBIOSVersion /value') do SET biosversion=%%A
 
-REM Get Computer Total Physical Memory
+# Get Computer Total Physical Memory
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% COMPUTERSYSTEM Get TotalPhysicalMemory /value') do SET totalphysicalmemory=%%A
 
-REM Get Computer CPU
+# Get Computer CPU
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% CPU GET NAME /value') do SET cpu=%%A
 
-REM Get Computer OS
+# Get Computer OS
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% os get Name /value') do SET osname=%%A
 FOR /F "tokens=1 delims='|'" %%A in ("%osname%") do SET osname=%%A
 
-REM Get Computer OS Architecture
+# Get Computer OS Architecture
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS GET OSArchitecture /value') do SET osarchitecture=%%A
 
-REM Get Computer OS SP
+# Get Computer OS SP
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS GET ServicePackMajorVersion /value') do SET sp=%%A
 
-REM Get Computer Username
+# Get Computer Username
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% COMPUTERSYSTEM Get Username /value') do SET username=%%A
 
-REM Get Computer Printers
+# Get Computer Printers
 FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% PRINTER GET Name /value') do SET printers=%%A
 
-REM Get Computer Memory in Gigabytes
+# Get Computer Memory in Gigabytes
 FOR /F "usebackq tokens=1" %%A in (`powershell [Math]::round^(%totalphysicalmemory%/1024/1024/1024^)`) do SET memory=%%A
 
 echo done!
 
 CLS
 
-REM Display everything on screen
+# Display everything on screen
 echo ------------------------------
 echo COMPUTER:
 echo System Name:      %system%
@@ -162,7 +162,7 @@ echo.
 
 GOTO CONTINUEPROGRAM
 
-REM Generate file
+# Generate file
 SET file="%~dp0%computer%.txt"
 echo ------------------------------ > %file%
 echo COMPUTER: >>   %file%
@@ -199,7 +199,7 @@ echo File created at %file%
 
 :CONTINUEPROGRAM
 
-REM request user to push any key to continue
+# Request user to push any key to continue
 pause
 
 goto WINNT
