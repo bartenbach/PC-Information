@@ -42,18 +42,17 @@ function Handle-WinNT {
   $pstring
 }
 
-# Get Computer Name / IP Address
 function Get-PCName {
-	echo Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!
-	$computer=%computername%
-	set /p computer=[Enter a PC name or IP Address Here] 
-	echo ----------------
+  echo Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!
+  $computer=%computername%
+  set /p computer=[Enter a PC name or IP Address Here] 
+  echo ----------------
 }
 
 if (%computer% != %computername%) { 
-	Handle-Remote
+  Handle-Remote
 } else {
-	goto start
+  Main
 }
 
 function Handle-Remote {
@@ -89,7 +88,7 @@ if ([%pass%]::IsNullOrEmpty) {
 	$pstring=''
 } else {
 	$pstring=/password:"%pass%"
-	goto start
+	Main
 }
 
 function Main {
@@ -101,9 +100,9 @@ function Main {
   wmic %cstring% %ustring% %pstring% OS Get csname
 
   if (%errorlevel% == -2147023174) { 
-	goto norpc
+	Handle-NoRPC
   } elseif (%errorlevel% == -2147024891) {
-	goto baduser
+	Handle-BadUser
   }
 
   echo Getting data [Computer: %computer%]...
@@ -164,7 +163,6 @@ function Main {
   #TODO ^ combine
 
   echo done!
-
   clear
 }
 
@@ -230,34 +228,33 @@ function generateFile {
   echo ------------------------------ >> %file%
 
   echo File created at %file%
-  # pause
+  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
-function norpc {
+function Handle-NoRPC {
   echo ----------------
   echo Error...No connection could be made to [%computer%]...
   echo Error...Please try again...
   echo ----------------
-  pause
+  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   cls
   goto winnt
 }
 
-function baduser {
+function Handle-BadUser {
   echo ----------------
   echo Error...Access Denied using [%user%]...
   echo Error...Please try again...
   echo ----------------
-  pause
+  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   cls
   goto username
 }
 
-function nocon {
+function Handle-Nocon {
   echo ----------------
   echo Error...Invalid Operating System...
   echo Error...No actions were made...
   echo ----------------
-  pause
-#goto END
+  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
