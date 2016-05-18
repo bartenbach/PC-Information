@@ -88,57 +88,19 @@ function Main {
   Write-Host "Getting data [Computer: $computer]..." -foregroundcolor "green"
   Write-Host "Please Wait...." -foregroundcolor "green"
 
-  # Get Computer Name
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS Get csname /value') do SET system=%%A
   $system = wmic $cstring $ustring $pstring os get csname /value
-
-  # Get Computer Manufacturer
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% ComputerSystem Get Manufacturer /value') do SET manufacturer=%%A
   $manufacturer = wmic $cstring $ustring $pstring computersystem get manufacturer /value
-
-  # Get Computer Model
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% ComputerSystem Get Model /value') do SET model=%%A
   $model = wmic $cstring $ustring $pstring computersystem get model /value
-
-  # Get Computer Serial Number
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% Bios Get SerialNumber /value') do SET serialnumber=%%A
   $serialnumber = wmic $cstring $ustring $pstring bios get serialnumber /value
-
-  # Get Computer BIOS Version
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% Bios Get SMBIOSBIOSVersion /value') do SET biosversion=%%A
   $biosversion = wmic $cstring $ustring $pstring bios get smbiosbiosversion /value
-
-  # Get Computer Total Physical Memory
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% COMPUTERSYSTEM Get TotalPhysicalMemory /value') do SET totalphysicalmemory=%%A
   $totalphysicalmemory = wmic $cstring $ustring $pstring computersystem get totalphysicalmemory /value
-
-  # Get Computer CPU
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% CPU GET NAME /value') do SET cpu=%%A
   $cpu = wmic $cstring $ustring $pstring cpu get name /value
-
-  # Get Computer OS
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% os get Name /value') do SET osname=%%A
-  #FOR /F "tokens=1 delims='|'" %%A in ("%osname%") do SET osname=%%A
   $osname = wmic $cstring $ustring $pstring os get name /value
-
-  # Get Computer OS Architecture
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS GET OSArchitecture /value') do SET osarchitecture=%%A
   $osarchitecture = wmic $cstring $ustring $pstring os get osarchitecture /value
-
-  # Get Computer OS SP
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% OS GET ServicePackMajorVersion /value') do SET sp=%%A
   $sp = wmic $cstring $ustring $pstring os get servicepackmajorversion /value
-
-  # Get Computer Username
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% COMPUTERSYSTEM Get Username /value') do SET username=%%A
   $username = wmic $cstring $ustring $pstring computersystem get username /value
-
-  # Get Computer Printers
-  #FOR /F "tokens=2 delims='='" %%A in ('wmic %cstring% %ustring% %pstring% PRINTER GET Name /value') do SET printers=%%A
   $printers = wmic $cstring $ustring $pstring printer get name /value
 
-  # Get Computer Memory in Gigabytes
-  #FOR /F "usebackq tokens=1" %%A in (`powershell [Math]::round^(%totalphysicalmemory%/1024/1024/1024^)`) do SET memory=%%A
   #$memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
   #TODO ^ combine
 
@@ -207,7 +169,6 @@ function Get-Password {
   }
 }
 
-# Display everything on screen
 function display {
   Write-Host "------------------------------"
   Write-Host "COMPUTER:"
