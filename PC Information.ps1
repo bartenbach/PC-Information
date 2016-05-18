@@ -17,10 +17,10 @@
 Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "green"
 
 if (%os%==Windows_NT) {
-	echo "It works!"
-	Handle-WinNT
+  echo "It works!"
+  Handle-WinNT
 } else {
-	Handle-Nocon
+  Handle-Nocon
 }
 	
 function Handle-WinNT {
@@ -85,10 +85,10 @@ function Get-Password {
 
 # Check if password was entered
 if ([%pass%]::IsNullOrEmpty) { 
-	$pstring=''
+  $pstring=''
 } else {
-	$pstring=/password:"%pass%"
-	Main
+  $pstring=/password:"%pass%"
+  Main
 }
 
 function Main {
