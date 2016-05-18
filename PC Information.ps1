@@ -88,24 +88,30 @@ function Main {
   Write-Host "Getting data [Computer: $computer]..." -foregroundcolor "green"
   Write-Host "Please Wait...." -foregroundcolor "green"
 
-  $system = wmic $cstring $ustring $pstring os get csname /value
-  $manufacturer = wmic $cstring $ustring $pstring computersystem get manufacturer /value
-  $model = wmic $cstring $ustring $pstring computersystem get model /value
-  $serialnumber = wmic $cstring $ustring $pstring bios get serialnumber /value
-  $biosversion = wmic $cstring $ustring $pstring bios get smbiosbiosversion /value
-  $totalphysicalmemory = wmic $cstring $ustring $pstring computersystem get totalphysicalmemory /value
-  $cpu = wmic $cstring $ustring $pstring cpu get name /value
-  $osname = wmic $cstring $ustring $pstring os get name /value
-  $osarchitecture = wmic $cstring $ustring $pstring os get osarchitecture /value
-  $sp = wmic $cstring $ustring $pstring os get servicepackmajorversion /value
-  $username = wmic $cstring $ustring $pstring computersystem get username /value
-  $printers = wmic $cstring $ustring $pstring printer get name /value
+  $system = get-wmiobject win32_operatingsystem | select-object -expand csname
+  $manufacturer = get-wmiobject win32_computersystem | select-object -expand manufacturer
+  $model = get-wmiobject win32_computersystem | select-object -expand model
+  $serialnumber = get-wmiobject win32_bios | select-object -expand serialnumber
+  $biosversion = get-wmiobject win32_bios | select-object -expand smbiosbiosversion
+  #$totalphysicalmemory = wmic $cstring $ustring $pstring computersystem get totalphysicalmemory /value
+  $totalphysicalmemory = get-wmiobject win32_computersystem | select-object totalphysicalmemory
+  #$cpu = wmic $cstring $ustring $pstring cpu get name /value
+  $cpu = get-wmiobject win32_processor | select-object name
+  #$osname = wmic $cstring $ustring $pstring os get name /value
+  $osname = get-wmiobject -class win32_operatingsystem | select-object name
+  #$osarchitecture = wmic $cstring $ustring $pstring os get osarchitecture /value
+  $osarchitecture = get-wmiobject -class win32_operatingsystem | select-object osarchitecture
+  $sp = get-wmiobject -class win32_operatingsystem | select-object -expand servicepackmajorversion
+  $username = get-wmiobject -class win32_computersystem | select-object -expand username
+  #$printers = wmic $cstring $ustring $pstring printer get name /value
+  $printers = get-wmiobject -class win32_printer | select-object name
 
-  #$memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
+  #echo $totalphysicalmemory
+  $memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
   #TODO ^ combine
 
   Write-Host "done!" -foregroundcolor "green"
-  clear
+  #clear
   display
 }
 
@@ -142,7 +148,7 @@ function Get-Temperature {
   $currentTempKelvin = $t.CurrentTemperature / 10
   $currentTempCelsius = $currentTempKelvin - 273.15
   $currentTempFahrenheit = (9/5) * $currentTempCelsius + 32
-  return $currentTempCelsius.ToString() + "°C"
+  return "Temperature:          " + $currentTempCelsius.ToString() + " Celsius"
 }
 
 function Get-Uptime {
@@ -172,24 +178,24 @@ function Get-Password {
 function display {
   Write-Host "------------------------------"
   Write-Host "COMPUTER:"
-  Write-Host "System Name:      $system"
-  Write-Host "Manufacturer:     $manufacturer"
-  Write-Host "Model:            $model"
-  Write-Host "Serial Number:    $serialnumber"
-  Write-Host "BIOS Version:     $biosversion"
+  Write-Host "System Name:          $system"
+  Write-Host "Manufacturer:         $manufacturer"
+  Write-Host "Model:                $model"
+  Write-Host "Serial Number:        $serialnumber"
+  Write-Host "BIOS Version:         $biosversion"
   Write-Host ""
   Write-Host "SPECS:"
-  Write-Host "Total RAM:        $memory GB"
-  Write-Host "CPU:	          $cpu"
+  Write-Host "Total RAM:            $memory GB"
+  Write-Host "CPU:	              $cpu"
   Write-Host ""
   Write-Host "O/S:"
-  Write-Host "Operating System: $osname, $osarchitecture"
-  Write-Host "Service Pack:     $sp"
+  Write-Host "Operating System:     $osname $osarchitecture"
+  Write-Host "Service Pack:         $sp"
   Write-Host ""
-  Write-Host "PRINTER(S):       $printers"
+  Write-Host "PRINTER(S):           $printers"
   Write-Host ""
   Write-Host "USER INFORMATION:"
-  Write-Host "Domain\Username:  $username"
+  Write-Host "Domain\Username:      $username"
   Write-Host ""
   Get-Uptime
   Get-Temperature
