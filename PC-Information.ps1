@@ -16,75 +16,40 @@
 
 Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "white"
 
-function Handle-NoRPC {
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  Write-Host "Error...No connection could be made to [$computer]..." -foregroundcolor "red"
-  Write-Host "Error...Please try again..." -foregroundcolor "red"
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-  clear
-  Main
+function Handle-NoConnection {
+  $FriendlyName = $Computer.split(":")[1]
+  $Host.UI.WriteErrorLine("Error: No connection could be made to [$FriendlyName] -- Is the machine on?")
+  Exit
 }
 
-function Handle-BadUser {
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  Write-Host "Error...Access Denied using [%user%]..." -foregroundcolor "red"
-  Write-Host "Error...Please try again..." -foregroundcolor "red"
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-  clear
-  Get-Username
+function Handle-InvalidOperatingSystem {
+  $Host.UI.WriteErrorLine("Error: Invalid Operating System -- Is that a Windows machine?")
+  Exit
 }
 
-function Handle-Nocon {
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  Write-Host "Error...Invalid Operating System..." -foregroundcolor "red"
-  Write-Host "Error...No actions were made..." -foregroundcolor "red"
-  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
-  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-  clear
-  Main
-}
-
-function init {
+function Initialize {
   $OS = Get-WmiObject -Computer $env:computername -Class Win32_OperatingSystem
   if ($OS.caption -like "*Windows*") {
-    $system=
-    $manufacturer=
-    $model=
-    $serialnumber=
-    $biosversion=
-    $totalphysicalmemory=
-    $cpu=
-    $printers=
-    $osarchitecture=
-    $osname=
-    $sp=
-    $domain=
-    $username=
-    $cstring=
-    $ustring=
-    $pstring
+    $cstring=''
+    $ustring=''
+    $pstring=''
   } else {
-    Handle-Nocon
+    Handle-InvalidOperatingSystem
   }
 }
 
 function Main {
-  init
-  $computer = Get-PCName
-  Write-Host "Checking connection [Computer: $computer ]..." -foregroundcolor "green"
+  Clear
+  Initialize
+  $Computer = Get-ComputerName
+  Write-Host "Checking connection..." -ForegroundColor "green"
 
- # Check connection
- # wmic $cstring $ustring $pstring OS Get csname
-
- # if (%errorlevel% == -2147023174) { 
- #	 Handle-NoRPC
- # } elseif (%errorlevel% == -2147024891) {
- #   Handle-BadUser
- # }
-
-  Write-Host "Getting data [Computer: $computer]..." -foregroundcolor "green"
+  $Connection = Test-Connection -ComputerName $computer -Quiet
+  if (!$Connection) { 
+    Handle-NoConnection
+  }
+ 
+  Write-Host "Getting data..." -ForegroundColor "green"
 
   $system = get-wmiobject win32_operatingsystem | select-object -expand csname
   $manufacturer = get-wmiobject win32_computersystem | select-object -expand manufacturer
@@ -102,14 +67,12 @@ function Main {
   # formatting
   $memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
 
-  Write-Host "done!" -foregroundcolor "green"
-  display
-  $nothing = read-host
+  Display-Result
 }
 
-function Get-PCName {
+function Get-ComputerName {
   Write-Host "Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!" -foregroundcolor "green"
-  $computer = Read-Host -prompt "[Enter a PC name or IP Address Here]"
+  $computer = Read-Host -prompt "Enter a PC name or IP Address Here"
   Write-Host "---------------------------------------------------" -foregroundcolor "green"
   
   if ([string]::IsNullOrEmpty($computer)) {
@@ -119,7 +82,7 @@ function Get-PCName {
   }
 }
 
-# This is sketchy
+# This is sketchy and rarely works correctly
 function Get-Temperature {
   $t = Get-WmiObject MSAcpi_ThermalZoneTemperature -Namespace "root/wmi"
   $currentTempKelvin = $t.CurrentTemperature / 10
@@ -131,19 +94,20 @@ function Get-Temperature {
 function Get-Uptime {
    $os = Get-WmiObject win32_operatingsystem
    $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
-   $Display = "Uptime:               " `
+   $UptimeString = "Uptime:               " `
        + $Uptime.Days + " days, " + $Uptime.Hours + " hours, " + $Uptime.Minutes + " minutes" 
-   Write-Output $Display
+   Write-Host $UptimeString
 }
 
-function display {
-  Write-Host "---------------------------------------------------"
+function Display-Result {
+  Write-Host "---------------------------------------------------" -foregroundcolor "green"
   Write-Host "COMPUTER:"
   Write-Host "System Name:          $system"
   Write-Host "Manufacturer:         $manufacturer"
   Write-Host "Model:                $model"
   Write-Host "Serial Number:        $serialnumber"
   Write-Host "BIOS Version:         $biosversion"
+  Get-Uptime
   Write-Host ""
   Write-Host "SPECS:"
   Write-Host "Total RAM:            $memory GB"
@@ -157,8 +121,6 @@ function display {
   Write-Host ""
   Write-Host "USER INFORMATION:"
   Write-Host "Domain\Username:      $username"
-  Write-Host ""
-  Get-Uptime
   Write-Host ""
   Write-Host "NETWORK PROPERTIES:"
   GETMAC /S $computer
