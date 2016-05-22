@@ -17,30 +17,30 @@
 Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "white"
 
 function Handle-NoRPC {
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   Write-Host "Error...No connection could be made to [$computer]..." -foregroundcolor "red"
   Write-Host "Error...Please try again..." -foregroundcolor "red"
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   clear
   Main
 }
 
 function Handle-BadUser {
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   Write-Host "Error...Access Denied using [%user%]..." -foregroundcolor "red"
   Write-Host "Error...Please try again..." -foregroundcolor "red"
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   clear
   Get-Username
 }
 
 function Handle-Nocon {
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   Write-Host "Error...Invalid Operating System..." -foregroundcolor "red"
   Write-Host "Error...No actions were made..." -foregroundcolor "red"
-  Write-Host "----------------" -foregroundcolor "yellow"
+  Write-Host "---------------------------------------------------" -foregroundcolor "yellow"
   $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   clear
   Main
@@ -74,7 +74,6 @@ function Main {
   init
   $computer = Get-PCName
   Write-Host "Checking connection [Computer: $computer ]..." -foregroundcolor "green"
-  Write-Host "Please Wait...." -foregroundcolor "green"
 
  # Check connection
  # wmic $cstring $ustring $pstring OS Get csname
@@ -86,39 +85,32 @@ function Main {
  # }
 
   Write-Host "Getting data [Computer: $computer]..." -foregroundcolor "green"
-  Write-Host "Please Wait...." -foregroundcolor "green"
 
   $system = get-wmiobject win32_operatingsystem | select-object -expand csname
   $manufacturer = get-wmiobject win32_computersystem | select-object -expand manufacturer
   $model = get-wmiobject win32_computersystem | select-object -expand model
   $serialnumber = get-wmiobject win32_bios | select-object -expand serialnumber
   $biosversion = get-wmiobject win32_bios | select-object -expand smbiosbiosversion
-  #$totalphysicalmemory = wmic $cstring $ustring $pstring computersystem get totalphysicalmemory /value
-  $totalphysicalmemory = get-wmiobject win32_computersystem | select-object totalphysicalmemory
-  #$cpu = wmic $cstring $ustring $pstring cpu get name /value
-  $cpu = get-wmiobject win32_processor | select-object name
-  #$osname = wmic $cstring $ustring $pstring os get name /value
-  $osname = get-wmiobject -class win32_operatingsystem | select-object name
-  #$osarchitecture = wmic $cstring $ustring $pstring os get osarchitecture /value
-  $osarchitecture = get-wmiobject -class win32_operatingsystem | select-object osarchitecture
+  $totalphysicalmemory = get-wmiobject win32_computersystem | select-object -expand totalphysicalmemory
+  $cpu = get-wmiobject win32_processor | select-object -expand name
+  $osname = (get-wmiobject -class win32_operatingsystem | select-object -expand name).split("|")[0]
+  $osarchitecture = get-wmiobject -class win32_operatingsystem | select-object -expand osarchitecture
   $sp = get-wmiobject -class win32_operatingsystem | select-object -expand servicepackmajorversion
   $username = get-wmiobject -class win32_computersystem | select-object -expand username
-  #$printers = wmic $cstring $ustring $pstring printer get name /value
-  $printers = get-wmiobject -class win32_printer | select-object name
+  $printers = get-wmiobject -class win32_printer | select-object -expand name
 
-  #echo $totalphysicalmemory
+  # formatting
   $memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
-  #TODO ^ combine
 
   Write-Host "done!" -foregroundcolor "green"
-  #clear
   display
+  $nothing = read-host
 }
 
 function Get-PCName {
   Write-Host "Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!" -foregroundcolor "green"
   $computer = Read-Host -prompt "[Enter a PC name or IP Address Here]"
-  Write-Host "----------------" -foregroundcolor "green"
+  Write-Host "---------------------------------------------------" -foregroundcolor "green"
   
   if ([string]::IsNullOrEmpty($computer)) {
 	return $env:computername
@@ -127,22 +119,7 @@ function Get-PCName {
   }
 }
 
-function Get-Username {
-  # Get Username
-  # TO REENABLE username and password, REMOVE "goto start" BELOW THIS LINE.  Otherwise program assumes credentials of logged in individual.
-  Main
-  #echo ----------------
-  #echo Type a Username and press Enter (!!MUST BE ADMIN ON REMOTE SYSTEM!!)
-  #set user=%username%
-  #set /p user=[Press Enter To Use Your Username - %username%]
-  #echo ----------------
-
-  # Check If Other Username
-  if ($user -ne $env:username) {
-    $ustring="/user:" + $user
-  }
-}
-
+# This is sketchy
 function Get-Temperature {
   $t = Get-WmiObject MSAcpi_ThermalZoneTemperature -Namespace "root/wmi"
   $currentTempKelvin = $t.CurrentTemperature / 10
@@ -159,24 +136,8 @@ function Get-Uptime {
    Write-Output $Display
 }
 
-#TODO this doesn't work yet
-function Get-Password {
-  Write-Host "----------------"
-  Write-Host "Type in a Password and press Enter (with or without DOMAIN)"
-  $pass=
-  set /p pass=
-  Write-Host "----------------"
-  
-  # Check if password was entered
-  if ($pass::IsNullOrEmpty) { 
-    $pstring=''
-  } else {
-    $pstring="/password:" + $pass
-  }
-}
-
 function display {
-  Write-Host "------------------------------"
+  Write-Host "---------------------------------------------------"
   Write-Host "COMPUTER:"
   Write-Host "System Name:          $system"
   Write-Host "Manufacturer:         $manufacturer"
@@ -198,12 +159,11 @@ function display {
   Write-Host "Domain\Username:      $username"
   Write-Host ""
   Get-Uptime
-  Get-Temperature
   Write-Host ""
   Write-Host "NETWORK PROPERTIES:"
   GETMAC /S $computer
   NSLOOKUP $computer
-  Write-Host "------------------------------"
+  Write-Host "---------------------------------------------------"
   Write-Host ""
 }
 
