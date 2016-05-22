@@ -29,11 +29,7 @@ function Handle-InvalidOperatingSystem {
 
 function Initialize {
   $OS = Get-WmiObject -Computer $env:computername -Class Win32_OperatingSystem
-  if ($OS.caption -like "*Windows*") {
-    $cstring=''
-    $ustring=''
-    $pstring=''
-  } else {
+  if ($OS.caption -notlike "*Windows*") {
     Handle-InvalidOperatingSystem
   }
 }
@@ -42,126 +38,100 @@ function Main {
   Clear
   Initialize
   $Computer = Get-ComputerName
-  Write-Host "Checking connection..." -ForegroundColor "green"
-
-  $Connection = Test-Connection -ComputerName $computer -Quiet
-  if (!$Connection) { 
-    Handle-NoConnection
-  }
- 
+  Check-Connection $Computer
+  
   Write-Host "Getting data..." -ForegroundColor "green"
-
-  $system = get-wmiobject win32_operatingsystem | select-object -expand csname
-  $manufacturer = get-wmiobject win32_computersystem | select-object -expand manufacturer
-  $model = get-wmiobject win32_computersystem | select-object -expand model
-  $serialnumber = get-wmiobject win32_bios | select-object -expand serialnumber
-  $biosversion = get-wmiobject win32_bios | select-object -expand smbiosbiosversion
-  $totalphysicalmemory = get-wmiobject win32_computersystem | select-object -expand totalphysicalmemory
-  $cpu = get-wmiobject win32_processor | select-object -expand name
-  $osname = (get-wmiobject -class win32_operatingsystem | select-object -expand name).split("|")[0]
-  $osarchitecture = get-wmiobject -class win32_operatingsystem | select-object -expand osarchitecture
-  $sp = get-wmiobject -class win32_operatingsystem | select-object -expand servicepackmajorversion
-  $username = get-wmiobject -class win32_computersystem | select-object -expand username
-  $printers = get-wmiobject -class win32_printer | select-object -expand name
-
+  
+  $system =              Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand CsName
+  $manufacturer =        Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Manufacturer
+  $model =               Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Model
+  $serialnumber =        Get-WmiObject -Class Win32_Bios                        -ComputerName $Computer | Select-Object -Expand SerialNumber
+  $biosversion =         Get-WmiObject -Class Win32_Bios                        -ComputerName $Computer | Select-Object -Expand SmBiosBiosVersion
+  $totalphysicalmemory = Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand TotalPhysicalMemory
+  $cpu =                 Get-WmiObject -Class Win32_Processor                   -ComputerName $Computer | Select-Object -Expand Name
+  $operatingsystem =     Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand Name
+  $osarchitecture =      Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand OsArchitecture
+  $sp =                  Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand ServicePackMajorVersion
+  $username =            Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Username
+  $printers =            Get-WmiObject -Class Win32_Printer                     -ComputerName $Computer | Select-Object -Expand Name
+  $macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
+  $ipaddress =           (Resolve-DnsName Ariel | Select-Object -Expand IPAddress)[3]
+  
   # formatting
-  $memory = [Math]::round($totalphysicalmemory/1024/1024/1024)
-
+  $memory    = [Math]::round($totalphysicalmemory/1024/1024/1024)
+  [String]$memoryString = [String]$memory + " GB"
+  $processor = $cpu.split("|")[0]
+  $osname = $operatingsystem.split("|")[0]
+  $osname += " "
+  $osname += $osarchitecture
+  if ($sp -gt 0) {
+    $osname += " SP" + $sp
+  }
+  
   Display-Result
+  $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+function Check-Connection([String]$ComputerName) {
+  Write-Host "----------------------------------------------------------" -foregroundcolor "green"
+  Write-Host "Checking connection..." -ForegroundColor "green"
+  $Connection = Test-Connection -ComputerName $computer -Quiet
+  if (!$Connection) {
+	Handle-NoConnection
+  }
 }
 
 function Get-ComputerName {
-  Write-Host "Please enter a PC Name or IP. !!YOU MUST HAVE ADMIN RIGHTS ON REMOTE PC!!" -foregroundcolor "green"
-  $computer = Read-Host -prompt "Enter a PC name or IP Address Here"
-  Write-Host "---------------------------------------------------" -foregroundcolor "green"
+  Write-Host "Enter PC name or IP Address (leave blank for localhost): " -NoNewLine -ForegroundColor "Green"
+  $computer = Read-Host
   
   if ([string]::IsNullOrEmpty($computer)) {
 	return $env:computername
   } else {
-	return "/node:" + $computer
+	return $computer
   }
-}
-
-# This is sketchy and rarely works correctly
-function Get-Temperature {
-  $t = Get-WmiObject MSAcpi_ThermalZoneTemperature -Namespace "root/wmi"
-  $currentTempKelvin = $t.CurrentTemperature / 10
-  $currentTempCelsius = $currentTempKelvin - 273.15
-  $currentTempFahrenheit = (9/5) * $currentTempCelsius + 32
-  return "Temperature:          " + $currentTempCelsius.ToString() + " Celsius"
 }
 
 function Get-Uptime {
    $os = Get-WmiObject win32_operatingsystem
    $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
-   $UptimeString = "Uptime:               " `
-       + $Uptime.Days + " days, " + $Uptime.Hours + " hours, " + $Uptime.Minutes + " minutes" 
-   Write-Host $UptimeString
+   $days = $Uptime.Days
+   $hours = $Uptime.Hours
+   $minutes = $Uptime.Minutes
+   return "$days days, $hours hours, $minutes minutes" 
+}
+
+function Format-Result([System.ConsoleColor]$color1, [String]$s, [System.ConsoleColor]$color2, [String]$info) {
+  Write-Host $s -NoNewLine -ForegroundColor $color1
+  Write-Host $info -ForegroundColor $color2
 }
 
 function Display-Result {
-  Write-Host "---------------------------------------------------" -foregroundcolor "green"
-  Write-Host "COMPUTER:"
-  Write-Host "System Name:          $system"
-  Write-Host "Manufacturer:         $manufacturer"
-  Write-Host "Model:                $model"
-  Write-Host "Serial Number:        $serialnumber"
-  Write-Host "BIOS Version:         $biosversion"
-  Get-Uptime
+  Write-Host "----------------------------------------------------------" -foregroundcolor "Green"
+  Write-Host "Computer" -ForegroundColor "Magenta"
+  Format-Result Cyan "  System Name          " Cyan $system
+  Format-Result Cyan "  Manufacturer         " Cyan $manufacturer
+  Format-Result Cyan "  Model                " Cyan $model
+  Format-Result Cyan "  Serial Number        " Cyan $serialnumber
+  Format-Result Cyan "  BIOS Version         " Cyan $biosversion
   Write-Host ""
-  Write-Host "SPECS:"
-  Write-Host "Total RAM:            $memory GB"
-  Write-Host "CPU:	              $cpu"
+  Write-Host "Specifications" -ForegroundColor "Magenta"
+  Format-Result Cyan "  CPU                  " Cyan $processor
+  Format-Result Cyan "  Total RAM            " Cyan $memoryString
+  Format-Result Cyan "  Operating System     " Cyan $osname
+  Format-Result Cyan "  Uptime               " Cyan (Get-Uptime)
   Write-Host ""
-  Write-Host "O/S:"
-  Write-Host "Operating System:     $osname $osarchitecture"
-  Write-Host "Service Pack:         $sp"
+  Write-Host "Printers" -ForegroundColor "Magenta"
+  Write-Host "  $printers" -foregroundcolor "Cyan"
   Write-Host ""
-  Write-Host "PRINTER(S):           $printers"
+  Write-Host "User" -ForegroundColor "Magenta"
+  Format-Result Cyan "  Domain\Username      " Cyan $username
   Write-Host ""
-  Write-Host "USER INFORMATION:"
-  Write-Host "Domain\Username:      $username"
+  Write-Host "Network" -ForegroundColor "Magenta"
+  Format-Result Cyan "  Mac Address          " Cyan $macaddress
+  Format-Result Cyan "  IP Address           " Cyan $ipaddress
+  Write-Host "---------------------------------------------------------" -foregroundcolor "Green"
   Write-Host ""
-  Write-Host "NETWORK PROPERTIES:"
-  GETMAC /S $computer
-  NSLOOKUP $computer
-  Write-Host "---------------------------------------------------"
-  Write-Host ""
-}
-
-function generateFile {
-  $file="%~dp0%computer%.txt"
-  echo ------------------------------ > $file
-  echo COMPUTER: >>   $file
-  echo System Name:   $system >> $file
-  echo Manufacturer:  $manufacturer >> $file
-  echo Model:         $model >> $file
-  echo Serial Number: $serialnumber >> $file
-  echo BIOS Version:  $biosversion >> $file
-  echo ------------------------------ >> $file
-  echo ------------------------------ >> $file
-  echo SPECS: >> $file
-  echo Total RAM:     $totalphysicalmemory >> $file
-  echo CPU:	       $cpu >> $file
-  echo ------------------------------ >> $file
-  echo ------------------------------ >> $file
-  echo O/S: >> $file
-  echo System:        $osname, $osarchitecture >> $file
-  echo Service Pack:  $sp >> $file
-  echo Printers:      $printers >> $file
-  echo ------------------------------ >> $file
-  echo ------------------------------ >> $file
-  echo USER INFORMATION: >> $file
-  echo Domain\User:   $username >> $file
-  echo ------------------------------ >> $file
-  echo ------------------------------ >> $file
-  echo NETWORK PROPERTIES: >> $file
-  GETMAC /S $computer >> $file
-  NSLOOKUP $computer >> $file
-  echo ------------------------------ >> $file
-
-  Write-Host "File created at %file%"
-  $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
 Main
