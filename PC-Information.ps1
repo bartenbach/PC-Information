@@ -14,8 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "white"
-
 function Handle-NoConnection {
   $FriendlyName = $Computer.split(":")[1]
   $Host.UI.WriteErrorLine("Error: No connection could be made to [$FriendlyName] -- Is the machine on?")
@@ -28,6 +26,7 @@ function Handle-InvalidOperatingSystem {
 }
 
 function Initialize {
+  Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "DarkGray"
   $OS = Get-WmiObject -Computer $env:computername -Class Win32_OperatingSystem
   if ($OS.caption -notlike "*Windows*") {
     Handle-InvalidOperatingSystem
@@ -69,11 +68,13 @@ function Main {
   }
   
   Display-Result
+  
+  Write-Host "Press any key to exit..." -ForegroundColor "Green"
   $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
 function Check-Connection([String]$ComputerName) {
-  Write-Host "----------------------------------------------------------" -foregroundcolor "green"
+  Write-Host "----------------------------------------------------------" -foregroundcolor "Green"
   Write-Host "Checking connection..." -ForegroundColor "green"
   $Connection = Test-Connection -ComputerName $computer -Quiet
   if (!$Connection) {
