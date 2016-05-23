@@ -17,11 +17,13 @@
 function Handle-NoConnection {
   $FriendlyName = $Computer.split(":")[1]
   $Host.UI.WriteErrorLine("Error: No connection could be made to [$FriendlyName] -- Is the machine on?")
+  $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   Exit
 }
 
 function Handle-InvalidOperatingSystem {
   $Host.UI.WriteErrorLine("Error: Invalid Operating System -- Is that a Windows machine?")
+  $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   Exit
 }
 
@@ -53,8 +55,8 @@ function Main {
   $sp =                  Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand ServicePackMajorVersion
   $username =            Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Username
   $printers =            Get-WmiObject -Class Win32_Printer                     -ComputerName $Computer | Select-Object -Expand Name
-  $macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
-  $ipaddress =           (Resolve-DnsName Ariel | Select-Object -Expand IPAddress)[3]
+  #$macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
+  #$ipaddress =           (Resolve-DnsName Ariel | Select-Object -Expand IPAddress)[3]
   
   # formatting
   $memory    = [Math]::round($totalphysicalmemory/1024/1024/1024)
