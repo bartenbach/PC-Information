@@ -29,9 +29,20 @@ function Handle-InvalidOperatingSystem {
 
 function Initialize {
   Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "DarkGray"
+  Check-PowerShell-Version
   $OS = Get-WmiObject -Computer $env:computername -Class Win32_OperatingSystem
   if ($OS.caption -notlike "*Windows*") {
     Handle-InvalidOperatingSystem
+  }
+}
+
+function Check-PowerShell-Version {
+  if ($PSVersionTable.PSVersion.Major -lt 5) {
+    Write-Host "(You should probably update your PowerShell to the latest version or things might not work)" -ForegroundColor "red"
+    Write-Host "(You're using PowerShell Version " -n -ForegroundColor "red"
+    Write-Host $PSVersionTable.PSVersion.Major -n -ForegroundColor "red"
+    Write-Host ".0)" -ForegroundColor "red"
+    Write-Host "https://www.microsoft.com/en-us/download/details.aspx?id=50395" -ForegroundColor "red"
   }
 }
 
@@ -55,8 +66,8 @@ function Main {
   $sp =                  Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand ServicePackMajorVersion
   $username =            Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Username
   $printers =            Get-WmiObject -Class Win32_Printer                     -ComputerName $Computer | Select-Object -Expand Name
-  #$macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
-  #$ipaddress =           (Resolve-DnsName Ariel | Select-Object -Expand IPAddress)[3]
+  $macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
+  $ip =                  Get-WmiObject -Class Win32_NetworkAdapterConfiguration | Where {$_.Ipaddress.length -gt 1} 
   
   # formatting
   $memory    = [Math]::round($totalphysicalmemory/1024/1024/1024)
@@ -131,8 +142,8 @@ function Display-Result {
   Format-Result Cyan "  Domain\Username      " Cyan $username
   Write-Host ""
   Write-Host "Network" -ForegroundColor "Magenta"
-  Format-Result Cyan "  Mac Address          " Cyan $macaddress
-  Format-Result Cyan "  IP Address           " Cyan $ipaddress
+  Format-Result Cyan "  IP                   " Cyan $ip.ipaddress[0]
+  Format-Result Cyan "  Mac                  " Cyan $macaddress
   Write-Host "---------------------------------------------------------" -foregroundcolor "Green"
   Write-Host ""
 }
