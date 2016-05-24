@@ -37,12 +37,8 @@ function Initialize {
 }
 
 function Check-PowerShell-Version {
-  if ($PSVersionTable.PSVersion.Major -lt 5) {
-    Write-Host "(You should probably update your PowerShell to the latest version or things might not work)" -ForegroundColor "red"
-    Write-Host "(You're using PowerShell Version " -n -ForegroundColor "red"
-    Write-Host $PSVersionTable.PSVersion.Major -n -ForegroundColor "red"
-    Write-Host ".0)" -ForegroundColor "red"
-    Write-Host "https://www.microsoft.com/en-us/download/details.aspx?id=50395" -ForegroundColor "red"
+  if ($PSVersionTable.PSVersion.Major -lt 2) {
+    Write-Warning "(You should probably update your PowerShell to the latest version or things might not work)"
   }
 }
 
@@ -66,7 +62,7 @@ function Main {
   $sp =                  Get-WmiObject -Class Win32_OperatingSystem             -ComputerName $Computer | Select-Object -Expand ServicePackMajorVersion
   $username =            Get-WmiObject -Class Win32_ComputerSystem              -ComputerName $Computer | Select-Object -Expand Username
   $printers =            Get-WmiObject -Class Win32_Printer                     -ComputerName $Computer | Select-Object -Expand Name
-  $macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
+  #$macaddress =          Get-WmiObject -Class Win32_NetworkAdapterConfiguration -ComputerName $Computer | Select-Object -Expand MacAddress
   $ip =                  Get-WmiObject -Class Win32_NetworkAdapterConfiguration | Where {$_.Ipaddress.length -gt 1} 
   
   # formatting
@@ -143,7 +139,7 @@ function Display-Result {
   Write-Host ""
   Write-Host "Network" -ForegroundColor "Magenta"
   Format-Result Cyan "  IP                   " Cyan $ip.ipaddress[0]
-  Format-Result Cyan "  Mac                  " Cyan $macaddress
+  #Format-Result Cyan "  Mac                  " Cyan $macaddress
   Write-Host "---------------------------------------------------------" -foregroundcolor "Green"
   Write-Host ""
 }
