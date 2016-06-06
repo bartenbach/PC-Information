@@ -14,9 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function Handle-NoConnection {
-  $FriendlyName = $Computer.split(":")[1]
-  $Host.UI.WriteErrorLine("Error: No connection could be made to [$FriendlyName] -- Is the machine on?")
+function Handle-NoConnection ([String]$Computer){
+  $Host.UI.WriteErrorLine("Error: No connection could be made to [$Computer] -- Is the machine on?")
   $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
   Exit
 }
@@ -82,12 +81,12 @@ function Main {
   $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
-function Check-Connection([String]$ComputerName) {
+function Check-Connection([String]$Computer) {
   Write-Host "----------------------------------------------------------" -foregroundcolor "Green"
   Write-Host "Checking connection..." -ForegroundColor "green"
-  $Connection = Test-Connection -ComputerName $computer -Quiet
+  $Connection = Test-Connection -ComputerName $Computer -Quiet
   if (!$Connection) {
-	Handle-NoConnection
+	  Handle-NoConnection $Computer
   }
 }
 
@@ -96,19 +95,19 @@ function Get-ComputerName {
   $computer = Read-Host
   
   if ([string]::IsNullOrEmpty($computer)) {
-	return $env:computername
+	  return $env:computername
   } else {
-	return $computer
+	  return $computer
   }
 }
 
 function Get-Uptime {
-   $os = Get-WmiObject win32_operatingsystem
-   $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
-   $days = $Uptime.Days
-   $hours = $Uptime.Hours
-   $minutes = $Uptime.Minutes
-   return "$days days, $hours hours, $minutes minutes" 
+  $os = Get-WmiObject win32_operatingsystem
+  $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
+  $days = $Uptime.Days
+  $hours = $Uptime.Hours
+  $minutes = $Uptime.Minutes
+  return "$days days, $hours hours, $minutes minutes" 
 }
 
 function Format-Result([System.ConsoleColor]$color1, [String]$s, [System.ConsoleColor]$color2, [String]$info) {
