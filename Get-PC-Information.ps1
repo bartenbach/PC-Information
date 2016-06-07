@@ -76,6 +76,7 @@ function Main {
   }
   
   Display-Result
+  Output-To-File
   
   Write-Host "Press any key to exit..." -ForegroundColor "Green"
   $Pause = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -141,6 +142,39 @@ function Display-Result {
   #Format-Result Cyan "  Mac                  " Cyan $macaddress
   Write-Host "---------------------------------------------------------" -foregroundcolor "Green"
   Write-Host ""
+}
+
+function Output-To-File {
+  $file = "$HOME\AppData\Local\Temp\PC-Information.log"
+  
+  if (!(Test-Path $file)) {
+    New-Item -Path $file -Type File -Force
+  }
+  "----------------------------------------------------------" >> $file
+  "Computer"                                                   >> $file
+  "  System Name          " + $system                          >> $file
+  "  Manufacturer         " + $manufacturer                    >> $file
+  "  Model                " + $model                           >> $file
+  "  Serial Number        " + $serialnumber                    >> $file
+  "  BIOS Version         " + $biosversion                     >> $file
+  ""                                                           >> $file
+  "Specifications"                                             >> $file
+  "  CPU                  " + $processor                       >> $file
+  "  Total RAM            " + $memoryString                    >> $file
+  "  Operating System     " + $osname                          >> $file
+  "  Uptime               " + (Get-Uptime)                     >> $file
+  ""                                                           >> $file
+  "Printers"                                                   >> $file
+  "  $printers"                                                >> $file
+  ""                                                           >> $file
+  "User"                                                       >> $file
+  "  Domain\Username      " + $username                        >> $file
+  ""                                                           >> $file
+  "Network"                                                    >> $file
+  "  IP                   " + $ip.ipaddress[0]                 >> $file
+  #"  Mac                  " $macaddress                        >> $file
+  "---------------------------------------------------------"  >> $file
+  ""                                                           >> $file
 }
 
 Main
