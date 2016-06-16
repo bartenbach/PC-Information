@@ -145,10 +145,11 @@ function Display-Result {
 }
 
 function Output-To-File {
-  $file = "$HOME\AppData\Local\Temp\PC-Information.log"
+  $file = "$HOME\Documents\PC-Information.log"
   
   if (!(Test-Path $file)) {
-    New-Item -Path $file -Type File -Force
+    New-Item -Path $file -Type File -Force >> $null
+    Write-Host "Log file created at $file `n" -ForegroundColor "Yellow"
   }
   "----------------------------------------------------------" >> $file
   "Computer"                                                   >> $file
@@ -175,6 +176,7 @@ function Output-To-File {
   #"  Mac                  " $macaddress                        >> $file
   "---------------------------------------------------------"  >> $file
   ""                                                           >> $file
+
 }
 
 Main
