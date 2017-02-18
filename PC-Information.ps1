@@ -13,6 +13,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+$version = '0.0.1'
 
 function Handle-NoConnection {
   $FriendlyName = $Computer.split(":")[1]
@@ -26,7 +27,7 @@ function Handle-InvalidOperatingSystem {
 }
 
 function Initialize {
-  Write-Host "PC Information - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "DarkGray"
+  Write-Host "PC Information $version - Jonathon Ament, Blake Bartenbach - Copyright 2016" -foregroundcolor "DarkGray"
   $OS = Get-WmiObject -Computer $env:computername -Class Win32_OperatingSystem
   if ($OS.caption -notlike "*Windows*") {
     Handle-InvalidOperatingSystem
@@ -113,7 +114,10 @@ function Display-Result {
   Format-Result Cyan "  System Name          " Cyan $system
   Format-Result Cyan "  Manufacturer         " Cyan $manufacturer
   Format-Result Cyan "  Model                " Cyan $model
-  Format-Result Cyan "  Serial Number        " Cyan $serialnumber
+  # serial number may not be available
+  if (![string]$serialnumber.equals("System Serial Number")) {
+    Format-Result Cyan "  Serial Number        " Cyan $serialnumber
+  }
   Format-Result Cyan "  BIOS Version         " Cyan $biosversion
   Write-Host ""
   Write-Host "Specifications" -ForegroundColor "Magenta"
